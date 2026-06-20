@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/main.ts",
-    "build": "tsup src/main.ts --format esm --out-dir dist"
+    "build": "tsup"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",
