@@ -8,8 +8,12 @@
     "build": "tsup src/main.ts --format esm --out-dir dist"
   },
   "devDependencies": {
+    "@types/ws": "^8.18.1",
     "tsup": "^8.5.1",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "ws": "^8.21.0"
   }
 }

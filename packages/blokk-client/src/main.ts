@@ -1,6 +1,7 @@
 import { initGPU } from './gpu'
 import { CUBE_VERTICES, CUBE_VERTEX_COUNT, CUBE_STRIDE } from './cube'
 import { perspective, lookAt, multiply } from './math'
+import { GameNetwork } from './network'
 import shaderSource from './shader.wgsl?raw'
 
 async function main() {
@@ -90,6 +91,13 @@ async function main() {
       format: 'depth24plus',
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
     })
+  })
+
+  // Network
+  const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:9000'
+  const net = new GameNetwork(`${wsUrl}?room=default`, (data) => {
+    // TODO: handle incoming messages (other players' positions, block updates)
+    console.log('received', new Uint8Array(data))
   })
 
   // Render loop

@@ -25,6 +25,8 @@ jobs:
 
       - name: Build client
         run: pnpm --filter blokk-client build
+        env:
+          VITE_WS_URL: ws://${{ secrets.HOST }}:9000
 
       - name: Deploy client to Cloudflare Pages
         run: npx wrangler pages deploy packages/blokk-client/dist --project-name=blokk
