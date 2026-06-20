@@ -72,6 +72,7 @@ jobs:
 
             if [ ! -f /etc/letsencrypt/live/s.blokk.cn/fullchain.pem ]; then
               certbot certonly --dns-cloudflare --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini -d s.blokk.cn --non-interactive --agree-tos --register-unsafely-without-email
+              echo "0 3 * * * certbot renew --dns-cloudflare --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini --deploy-hook 'pm2 restart blokk-server' --non-interactive" | crontab -
             fi
 
             certbot renew --dns-cloudflare --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini --deploy-hook 'pm2 restart blokk-server' --non-interactive || true
