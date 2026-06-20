@@ -48,25 +48,34 @@ jobs:
           ssh -i ~/.ssh/deploy_key ${{ secrets.SSH_USER }}@${{ secrets.HOST }} "mkdir -p /app/server"
           scp -i ~/.ssh/deploy_key -r packages/blokk-server/dist/* ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:/app/server/
 
-      - name: Setup & Restart server
+      - name: Setup, Cert & Restart server
         run: |
-          ssh -i ~/.ssh/deploy_key ${{ secrets.SSH_USER }}@${{ secrets.HOST }} << 'EOF'
-            export PATH=$PATH:/usr/local/bin:$HOME/.local/bin
+          ssh -i ~/.ssh/deploy_key ${{ secrets.SSH_USER }}@${{ secrets.HOST }} << EOF
+            export PATH=\$PATH:/usr/local/bin:\$HOME/.local/bin
+
             if ! command -v node &>/dev/null; then
               curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
               yum install -y nodejs
             fi
+
             if ! command -v pm2 &>/dev/null; then
               npm install -g pm2
               pm2 startup
             fi
+
             if ! command -v certbot &>/dev/null; then
-              yum install -y certbot
+              pip3 install certbot certbot-dns-cloudflare
             fi
+
+            echo 'dns_cloudflare_api_token = ${{ secrets.CF_DNS_TOKEN }}' > /etc/letsencrypt/cloudflare.ini
+            chmod 600 /etc/letsencrypt/cloudflare.ini
+
             if [ ! -f /etc/letsencrypt/live/s.blokk.cn/fullchain.pem ]; then
-              certbot certonly --standalone -d s.blokk.cn --non-interactive --agree-tos --register-unsafely-without-email
-              echo "0 3 * * * certbot renew --deploy-hook 'pm2 restart blokk-server'" | crontab -
+              certbot certonly --dns-cloudflare --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini -d s.blokk.cn --non-interactive --agree-tos --register-unsafely-without-email
             fi
+
+            certbot renew --dns-cloudflare --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini --deploy-hook 'pm2 restart blokk-server' --non-interactive || true
+
             pm2 restart blokk-server || pm2 start /app/server/main.js --name blokk-server
             pm2 save
           EOF
